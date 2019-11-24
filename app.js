@@ -3,7 +3,10 @@ const bodyParser = require('body-parser');
 const graphQlHttp = require('express-graphql');
 const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
 const Event = require('./models/event');
+const User = require('./models/user');
 
 const app = express();
 
@@ -21,6 +24,20 @@ app.use('/graphql', graphQlHttp({
             date: String!
         }
 
+        type User {
+            _id: ID!,
+            email: String,
+            name: String!,
+            password: String,
+
+        }
+
+        input UserInput {
+            email: String!
+            password: String!
+            name: String!
+        }
+
         input EventInput {
             title: String!
             description: String!
@@ -34,6 +51,7 @@ app.use('/graphql', graphQlHttp({
 
         type RootMutation {
             createEvent(eventInput: EventInput): Event
+            createUser(userInput: UserInput): User
         }
 
         schema {
@@ -74,6 +92,33 @@ app.use('/graphql', graphQlHttp({
                     console.error(err);
                     throw err;
                 });
+        },
+        createUser: args => {
+            return User.findOne({
+                email: args.userInput.email
+            })
+            .then(user => {
+                if (user) {
+                    throw new Error('L\'utilisateur existe déjà. Utilisez une autre adress mail')
+                }
+                return bcrypt
+                    .hash(args.userInput.password, 12)
+            })
+            .then(hashedPassword => {
+                const user = new User({
+                    email: args.userInput.email,
+                    name: args.userInput.name,
+                    password: hashedPassword,
+                }); 
+                return user.save();
+            })
+            .then(result => {
+                return {...result._doc, password: null}
+            })
+            .catch(err => {
+                console.error(err)
+                throw err;
+            })
         }
     },
     graphiql: true,
