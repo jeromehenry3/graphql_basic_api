@@ -81,12 +81,25 @@ app.use('/graphql', graphQlHttp({
                 description: args.eventInput.description,
                 price: +args.eventInput.price,
                 date: new Date(args.eventInput.date),
+                creator: '5dda78a7bdc0af69096738b1'
             });
+            let createdEvent;
             return event
                 .save()
                 .then(result => {
-                    console.log(result);
-                    return {...result._doc};
+                    createdEvent = {...result._doc}
+                    return User.findById('5dda78a7bdc0af69096738b1');
+                })
+                .then(user => {
+                    if (!user) {
+                        throw new Error('L\'utilisateur n\'existe pas !!!')
+                    }
+                    user.createdEvents.push(event);
+                    return user.save();
+                })
+                .then(result => {
+                    console.log(createdEvent);
+                    return createdEvent;
                 })
                 .catch(err => {
                     console.error(err);
@@ -99,7 +112,7 @@ app.use('/graphql', graphQlHttp({
             })
             .then(user => {
                 if (user) {
-                    throw new Error('L\'utilisateur existe déjà. Utilisez une autre adress mail')
+                    throw new Error('L\'utilisateur existe déjà. Utilisez une autre adresse mail')
                 }
                 return bcrypt
                     .hash(args.userInput.password, 12)
