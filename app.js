@@ -7,7 +7,7 @@ const app = express();
 
 app.use(bodyParser.json());
 
-app.get('/graphql', graphQlHttp({
+app.use('/graphql', graphQlHttp({
     schema: buildSchema(`
         type RootQuery {
             events: [String!]!
