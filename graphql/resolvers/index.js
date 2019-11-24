@@ -30,23 +30,22 @@ const events = async eventIds => {
 }
 
 module.exports = {
-    events: () => {
-        return Event.find()
-            .then(events => {
-                return events.map(event => {
-                    return {
-                        ...event._doc,
-                        date: new Date(event._doc.date).toISOString(),
-                        creator: user.bind(this, event._doc.creator)
-                    };
-                })
+    events: async () => {
+        try {
+            const events = await Event.find()
+            return events.map(event => {
+                return {
+                    ...event._doc,
+                    date: new Date(event._doc.date).toISOString(),
+                    creator: user.bind(this, event._doc.creator)
+                };
             })
-            .catch(err => {
-                console.error(err);
-                throw err;
-            })
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
     },
-    createEvent: (args) => {
+    createEvent: async (args) => {
         const event = new Event({
             title: args.eventInput.title,
             description: args.eventInput.description,
@@ -55,57 +54,48 @@ module.exports = {
             creator: '5dda78a7bdc0af69096738b1'
         });
         let createdEvent;
-        return event
-            .save()
-            .then(result => {
-                createdEvent = {
-                    ...result._doc,
-                    creator: user.bind(this, result._doc.creator),
-                    date: new Date(event._doc.date).toISOString(),
-                }
-                return User.findById('5dda78a7bdc0af69096738b1');
-            })
-            .then(user => {
-                if (!user) {
-                    throw new Error('L\'utilisateur n\'existe pas !!!')
-                }
-                user.createdEvents.push(event);
-                return user.save();
-            })
-            .then(result => {
-                console.log(createdEvent);
-                return createdEvent;
-            })
-            .catch(err => {
-                console.error(err);
-                throw err;
-            });
+        try {
+            const result = await event.save()
+            createdEvent = {
+                ...result._doc,
+                creator: user.bind(this, result._doc.creator),
+                date: new Date(event._doc.date).toISOString(),
+            }
+            const user = await User.findById('5dda78a7bdc0af69096738b1');
+
+            if (!user) {
+                throw new Error('L\'utilisateur n\'existe pas !!!')
+            }
+            user.createdEvents.push(event);
+            await user.save();
+
+            console.log(createdEvent);
+            return createdEvent;
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
     },
-    createUser: args => {
-        return User.findOne({
+    createUser: async args => {
+        try {
+        const existingUser = await User.findOne({
             email: args.userInput.email
         })
-        .then(user => {
-            if (user) {
-                throw new Error('L\'utilisateur existe déjà. Utilisez une autre adresse mail')
-            }
-            return bcrypt
-                .hash(args.userInput.password, 12)
-        })
-        .then(hashedPassword => {
-            const user = new User({
-                email: args.userInput.email,
-                name: args.userInput.name,
-                password: hashedPassword,
-            }); 
-            return user.save();
-        })
-        .then(result => {
-            return {...result._doc, password: null}
-        })
-        .catch(err => {
+        if (existingUser) {
+            throw new Error('L\'utilisateur existe déjà. Utilisez une autre adresse mail')
+        }
+        const hashedPassword = await bcrypt.hash(args.userInput.password, 12)
+        const user = new User({
+            email: args.userInput.email,
+            name: args.userInput.name,
+            password: hashedPassword,
+        }); 
+        const result = await user.save();
+        return {...result._doc, password: null}
+
+        } catch (err) {
             console.error(err)
             throw err;
-        })
+        }
     }
 }
