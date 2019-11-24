@@ -4,29 +4,29 @@ const Event = require('../../models/event');
 const User = require('../../models/user');
 
 
-const user = userId => {
-    return User.findById(userId)
-        .then(user => {
-            return { ...user._doc, createdEvents: events.bind(this, user._doc.createdEvents) }
-        })
-        .catch(err => {
-            console.error(err);
-            throw err;
-        })
+const user = async userId => {
+    try {
+        const user = await User.findById(userId)
+        return { ...user._doc, createdEvents: events.bind(this, user._doc.createdEvents) }
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
 }
 
-const events = eventIds => {
-    return Event.find({_id: {$in: eventIds}})
-        .then(events => {
-            return events.map(event => {
-                return {
-                    ...event._doc,
-                    creator: user.bind(this, event.creator),
-                    date: new Date(event._doc.date).toISOString(),
-                }
-            })
+const events = async eventIds => {
+    try {
+        const events = await Event.find({_id: {$in: eventIds}})
+        return events.map(event => {
+            return {
+                ...event._doc,
+                creator: user.bind(this, event.creator),
+                date: new Date(event._doc.date).toISOString(),
+            }
         })
-        .catch(err => {throw err})
+    } catch (err) {
+        throw err
+    }
 }
 
 module.exports = {
