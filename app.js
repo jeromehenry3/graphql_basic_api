@@ -22,6 +22,7 @@ app.use('/graphql', graphQlHttp({
             description: String!
             price: Float!
             date: String!
+            creator: User!
         }
 
         type User {
@@ -29,7 +30,7 @@ app.use('/graphql', graphQlHttp({
             email: String,
             name: String!,
             password: String,
-
+            createdEvents: [Event!]
         }
 
         input UserInput {
