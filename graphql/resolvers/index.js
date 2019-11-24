@@ -19,7 +19,11 @@ const events = eventIds => {
     return Event.find({_id: {$in: eventIds}})
         .then(events => {
             return events.map(event => {
-                return { ...event._doc, creator: user.bind(this, event.creator) }
+                return {
+                    ...event._doc,
+                    creator: user.bind(this, event.creator),
+                    date: new Date(event._doc.date).toISOString(),
+                }
             })
         })
         .catch(err => {throw err})
@@ -32,6 +36,7 @@ module.exports = {
                 return events.map(event => {
                     return {
                         ...event._doc,
+                        date: new Date(event._doc.date).toISOString(),
                         creator: user.bind(this, event._doc.creator)
                     };
                 })
@@ -53,7 +58,11 @@ module.exports = {
         return event
             .save()
             .then(result => {
-                createdEvent = {...result._doc, cretor: user.bind(this, result._doc.creator)}
+                createdEvent = {
+                    ...result._doc,
+                    creator: user.bind(this, result._doc.creator),
+                    date: new Date(event._doc.date).toISOString(),
+                }
                 return User.findById('5dda78a7bdc0af69096738b1');
             })
             .then(user => {
