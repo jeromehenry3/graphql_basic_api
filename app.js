@@ -10,9 +10,28 @@ const User = require('./models/user');
 
 const app = express();
 
-// let events = []; // Variable temporaire pour mocker la BDD
-
 app.use(bodyParser.json());
+
+const user = userId => {
+    return User.findById(userId)
+        .then(user => {
+            return { ...user._doc, createdEvents: events.bind(this, user._doc.createdEvents) }
+        })
+        .catch(err => {
+            console.error(err);
+            throw err;
+        })
+}
+
+const events = eventIds => {
+    return Event.find({_id: {$in: eventIds}})
+        .then(events => {
+            return events.map(event => {
+                return { ...event._doc, creator: user.bind(this, event.creator) }
+            })
+        })
+        .catch(err => {throw err})
+}
 
 app.use('/graphql', graphQlHttp({
     schema: buildSchema(`
@@ -67,7 +86,7 @@ app.use('/graphql', graphQlHttp({
                     return events.map(event => {
                         return {
                             ...event._doc,
-                            // _id: event._doc._id.toString(),
+                            creator: user.bind(this, event._doc.creator)
                         };
                     })
                 })
