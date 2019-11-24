@@ -62,4 +62,13 @@ app.use('/graphql', graphQlHttp({
     graphiql: true,
 }));
 
-app.listen(3000);
+mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-fp0u2.mongodb.net/test?retryWrites=true&w=majority`).then(
+    () => {
+        app.listen(3000);
+    }
+).catch(
+    err => {
+        console.error(err);
+    }
+)
+
