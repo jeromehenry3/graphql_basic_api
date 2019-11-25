@@ -5,6 +5,12 @@ const User = require('../../models/user');
 const Booking = require('../../models/booking');
 
 
+const eventShaper = event => ({
+    ...event._doc,
+    creator: user.bind(this, event.creator),
+    date: new Date(event._doc.date).toISOString(),
+})
+
 const user = async userId => {
     try {
         const user = await User.findById(userId)
@@ -18,13 +24,7 @@ const user = async userId => {
 const events = async eventIds => {
     try {
         const events = await Event.find({_id: {$in: eventIds}})
-        return events.map(event => {
-            return {
-                ...event._doc,
-                creator: user.bind(this, event.creator),
-                date: new Date(event._doc.date).toISOString(),
-            }
-        })
+        return events.map(event => eventShaper(event));
     } catch (err) {
         throw err
     }
@@ -33,10 +33,7 @@ const events = async eventIds => {
 const singleEvent = async eventId => {
     try {
         const event = await Event.findById(eventId)
-        return {
-            ...event._doc,
-            creator: user.bind(this, event.creator)
-        }
+        return eventShaper(event);
 
     } catch (error) {
         console.log(error);
@@ -49,11 +46,7 @@ module.exports = {
         try {
             const events = await Event.find()
             return events.map(event => {
-                return {
-                    ...event._doc,
-                    date: new Date(event._doc.date).toISOString(),
-                    creator: user.bind(this, event._doc.creator)
-                };
+                return eventShaper(event);
             })
         } catch (err) {
             console.error(err);
@@ -88,11 +81,7 @@ module.exports = {
         let createdEvent;
         try {
             const result = await event.save()
-            createdEvent = {
-                ...result._doc,
-                creator: user.bind(this, result._doc.creator),
-                date: new Date(event._doc.date).toISOString(),
-            }
+            createdEvent = eventShaper(result)
             const creator = await User.findById('5dda9900b479d7274b7c6f66');
 
             if (!creator) {
@@ -149,7 +138,7 @@ module.exports = {
                 createdAt: new Date(result._doc.createdAt).toISOString(),
                 updatedAt: new Date(result._doc.updatedAt).toISOString(),
                 user: user.bind(this, booking._doc.user),
-                event: singleEvent.bind(this, booking._doc.user),
+                event: singleEvent.bind(this, booking._doc.event),
             }
 
         } catch (err) {
@@ -159,11 +148,7 @@ module.exports = {
     cancelBooking: async args => {
         try {
             const booking = await Booking.findById(args.bookingId).populate('event');
-            const event = {
-                ...booking.event._doc,
-                creator: user.bind(this, booking.event._doc.creator),
-            
-            };
+            const event = eventShaper(booking.event);
             await Booking.deleteOne({
                 _id: args.bookingId,
             })
