@@ -19,8 +19,8 @@ type Event {
 
 type User {
     _id: ID!,
-    email: String,
-    name: String!,
+    email: String!,
+    name: String,
     password: String,
     createdEvents: [Event!]
 }
@@ -34,7 +34,7 @@ type AuthData {
 input UserInput {
     email: String!
     password: String!
-    name: String!
+    name: String
 }
 
 input EventInput {
