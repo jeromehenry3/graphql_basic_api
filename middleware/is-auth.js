@@ -8,13 +8,14 @@ module.exports = (req, res, next) => {
     }
     // Authorization:  Bearer doahdioaoihiov
     const token = authHeader.split(' ')[1];
+    let decodedToken = undefined;
     if (!token || token === '') {
         req.isAuth = false;
         return next();
-    } 
+    }
 
     try {
-        const decodedToken = jwt.verify(token, 'unestringlonguepourhasher');
+        decodedToken = jwt.verify(token, 'unestringlonguepourhasher');
     } catch (err) {
         req.isAuth = false;
         return next();
